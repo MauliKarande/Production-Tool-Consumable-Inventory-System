@@ -1,0 +1,27 @@
+# Java / Maven
+target/
+*.class
+*.jar
+!maven-wrapper.jar
+
+# Node / React
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
