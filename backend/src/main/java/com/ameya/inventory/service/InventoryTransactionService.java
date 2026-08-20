@@ -440,10 +440,14 @@ public class InventoryTransactionService {
         BigDecimal adjOut = totals.get(TransactionType.STOCK_ADJUSTMENT_OUT).abs();
         BigDecimal damaged = totals.get(TransactionType.DAMAGE).abs();
         BigDecimal scrapped = totals.get(TransactionType.SCRAP).abs();
+        // Signed as-is (not abs()'d): a REVERSAL's quantity already carries the sign of its
+        // effect on stock, and can go either way depending on what it reversed. Without this,
+        // the bucketed totals below don't sum to currentStock once any reversal has happened.
+        BigDecimal reversalNet = totals.get(TransactionType.REVERSAL);
         BigDecimal current = transactionRepository.currentStock(itemId);
 
         return new InventoryDtos.StockSummaryResponse(item.getId(), item.getItemCode(), item.getName(),
-                opening, purchased, issued, returned, adjIn, adjOut, damaged, scrapped, current);
+                opening, purchased, issued, returned, adjIn, adjOut, damaged, scrapped, reversalNet, current);
     }
 
     @Transactional(readOnly = true)

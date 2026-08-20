@@ -116,6 +116,7 @@ public class InventoryDtos {
             BigDecimal adjustmentOut,
             BigDecimal damaged,
             BigDecimal scrapped,
+            BigDecimal reversalNet,
             BigDecimal currentStock
     ) {
     }

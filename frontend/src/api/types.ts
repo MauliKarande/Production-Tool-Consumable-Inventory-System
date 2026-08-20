@@ -179,6 +179,7 @@ export interface StockSummaryResponse {
   adjustmentOut: number
   damaged: number
   scrapped: number
+  reversalNet: number
   currentStock: number
 }
 

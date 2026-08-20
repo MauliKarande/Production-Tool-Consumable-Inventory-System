@@ -239,6 +239,7 @@ export function ItemFormPage() {
               ['Adj. Out', summary.adjustmentOut],
               ['Damaged', summary.damaged],
               ['Scrapped', summary.scrapped],
+              ...(summary.reversalNet !== 0 ? [['Reversal (net)', summary.reversalNet] as const] : []),
             ].map(([label, val]) => (
               <Grid size={{ xs: 6, sm: 3 }} key={label as string}>
                 <Typography variant="caption" color="text.secondary">
