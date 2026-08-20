@@ -207,6 +207,131 @@ export interface CategoryConsumption {
   value: number
 }
 
+export interface PurchaseRequisitionLine {
+  id: number
+  itemId: number
+  itemCode: string
+  itemName: string
+  quantity: number
+  estimatedPrice: number
+  supplierId: number | null
+  supplierName: string | null
+  receivedQty: number
+  receivedTxnId: number | null
+}
+
+export interface PurchaseRequisition {
+  id: number
+  prNo: string
+  requestedByUserId: number
+  requestedByUsername: string
+  departmentId: number | null
+  departmentName: string | null
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'ORDERED' | 'RECEIVED' | 'CLOSED'
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT' | null
+  reason: string | null
+  approvedByUserId: number | null
+  approvedByUsername: string | null
+  approvedAt: string | null
+  createdAt: string
+  updatedAt: string
+  items: PurchaseRequisitionLine[]
+}
+
+export interface DashboardSummary {
+  itemCount: number
+  totalStockValue: number
+  lowStockCount: number
+  outOfStockCount: number
+  openAlertCount: number
+  openPrCount: number
+  thisMonthConsumptionValue: number
+}
+
+export interface StockValuationRow {
+  itemId: number
+  itemCode: string
+  itemName: string
+  categoryName: string
+  uomCode: string
+  currentStock: number
+  unitCost: number
+  value: number
+}
+
+export interface LowStockRow {
+  itemId: number
+  itemCode: string
+  itemName: string
+  currentStock: number
+  safeStock: number
+  maxStock: number | null
+  reorderQty: number
+  status: 'LOW_STOCK' | 'OUT_OF_STOCK'
+}
+
+export interface DeadStockRow {
+  itemId: number
+  itemCode: string
+  itemName: string
+  categoryName: string
+  currentStock: number
+  unitCost: number
+  value: number
+}
+
+export interface SupplierPriceRow {
+  itemId: number
+  itemCode: string
+  itemName: string
+  supplierId: number
+  supplierName: string
+  minPrice: number
+  maxPrice: number
+  avgPrice: number
+  timesQuoted: number
+}
+
+export interface SupplierSpendRow {
+  supplierId: number
+  supplierName: string
+  totalSpend: number
+  lineCount: number
+}
+
+export interface PurchasePipelineRow {
+  status: string
+  count: number
+}
+
+export interface ImportResult {
+  committed: boolean
+  sourceFile: string
+  manufacturersCreated: number
+  suppliersCreated: number
+  itemsCreated: number
+  machinesCreated: number
+  purchaseRequisitionsCreated: number
+  transactionsPosted: number
+  warnings: string[]
+  errors: string[]
+}
+
+export interface AlertResponse {
+  id: number
+  type: 'LOW_STOCK' | 'OUT_OF_STOCK' | 'HIGH_CONSUMPTION' | 'PENDING_RETURN' | 'UNUSUAL_CONSUMPTION' | 'PURCHASE_PENDING'
+  itemId: number | null
+  itemCode: string | null
+  itemName: string | null
+  message: string
+  status: 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED'
+  raisedAt: string
+  acknowledgedByUsername: string | null
+  acknowledgedAt: string | null
+  resolvedByUsername: string | null
+  resolvedAt: string | null
+}
+
 export interface MachineConsumptionDetail {
   machineId: number
   machineCode: string

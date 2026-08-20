@@ -7,10 +7,18 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ItemRepository extends JpaRepository<Item, Long>, JpaSpecificationExecutor<Item> {
     boolean existsByItemCodeIgnoreCase(String itemCode);
+
+    List<Item> findByActiveTrue();
+
+    /** Legacy-import dedup key (Phase 1 doc F.1: description is the only stable identity in the source data). */
+    Optional<Item> findByNameIgnoreCase(String name);
+
+    long countByItemCodeStartingWith(String prefix);
 
     /**
      * Locks the item row for the duration of the caller's transaction so

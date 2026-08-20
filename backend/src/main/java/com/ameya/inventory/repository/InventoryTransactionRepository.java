@@ -36,6 +36,39 @@ public interface InventoryTransactionRepository extends JpaRepository<InventoryT
         BigDecimal getTotal();
     }
 
+    /** Current stock for every item in one query - used by AlertService instead of N+1-ing currentStock(id) per item. */
+    @Query("select t.item.id as itemId, coalesce(sum(t.quantity), 0) as stock " +
+            "from InventoryTransaction t group by t.item.id")
+    List<ItemStockRow> allItemStocks();
+
+    interface ItemStockRow {
+        Long getItemId();
+        BigDecimal getStock();
+    }
+
+    /** Month-bucketed ISSUE_OUTWARD quantity per item, for AlertService's consumption-spike check. */
+    @Query("select t.item.id as itemId, function('date_format', t.txnDate, '%Y-%m') as ym, " +
+            "sum(abs(t.quantity)) as qty " +
+            "from InventoryTransaction t " +
+            "where t.txnType = 'ISSUE_OUTWARD' and t.txnDate between :from and :to " +
+            "group by t.item.id, function('date_format', t.txnDate, '%Y-%m')")
+    List<MonthlyItemQty> monthlyIssuedQtyByItem(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
+    interface MonthlyItemQty {
+        Long getItemId();
+        String getYm();
+        BigDecimal getQty();
+    }
+
+    /** Items with any ISSUE_OUTWARD on or after a date - used by the dead-stock report to find items with none. */
+    @Query("select distinct t.item.id from InventoryTransaction t where t.txnType = 'ISSUE_OUTWARD' and t.txnDate >= :since")
+    List<Long> itemIdsIssuedSince(@Param("since") LocalDate since);
+
+    /** Total consumption value over a date range - used by the dashboard's "this month" KPI. */
+    @Query("select coalesce(sum(abs(t.quantity) * t.unitCostAtTxn), 0) from InventoryTransaction t " +
+            "where t.txnType = 'ISSUE_OUTWARD' and t.txnDate between :from and :to")
+    BigDecimal totalConsumptionValue(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
     /**
      * Item-wise consumption (ISSUE_OUTWARD only) for one machine over a date
      * range - e.g. "what did CNC-1 consume in August". See Phase 1 doc §16.

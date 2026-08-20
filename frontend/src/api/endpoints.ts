@@ -1,8 +1,18 @@
 import { apiClient } from './client'
 import type {
+  AlertResponse,
   AssignmentResponse,
   AttributeDef,
   CategoryConsumption,
+  DashboardSummary,
+  DeadStockRow,
+  ImportResult,
+  LowStockRow,
+  PurchasePipelineRow,
+  PurchaseRequisition,
+  StockValuationRow,
+  SupplierPriceRow,
+  SupplierSpendRow,
   CurrentStockResponse,
   Department,
   Employee,
@@ -161,6 +171,62 @@ export const InventoryApi = {
 export const AccountabilityApi = {
   search: (params: { employeeId?: number; machineId?: number; itemId?: number; openOnly?: boolean; page?: number; size?: number }) =>
     apiClient.get<Page<AssignmentResponse>>('/api/accountability', { params }),
+}
+
+export const PurchaseRequisitionsApi = {
+  search: (params: { status?: string; priority?: string; departmentId?: number; page?: number; size?: number }) =>
+    apiClient.get<Page<PurchaseRequisition>>('/api/purchase-requisitions', { params }),
+  get: (id: number) => apiClient.get<PurchaseRequisition>(`/api/purchase-requisitions/${id}`),
+  create: (data: {
+    departmentId?: number | null
+    priority?: string
+    reason?: string
+    items: { itemId: number; quantity: number; estimatedPrice: number; supplierId?: number | null }[]
+  }) => apiClient.post<PurchaseRequisition>('/api/purchase-requisitions', data),
+  submit: (id: number) => apiClient.post<PurchaseRequisition>(`/api/purchase-requisitions/${id}/submit`),
+  approve: (id: number) => apiClient.post<PurchaseRequisition>(`/api/purchase-requisitions/${id}/approve`),
+  reject: (id: number, reason: string) =>
+    apiClient.post<PurchaseRequisition>(`/api/purchase-requisitions/${id}/reject`, { reason }),
+  markOrdered: (id: number) => apiClient.post<PurchaseRequisition>(`/api/purchase-requisitions/${id}/mark-ordered`),
+  receive: (
+    id: number,
+    lines: { prItemId: number; receivedQty: number; unitCost: number; directToFloor: boolean; machineId?: number | null }[],
+  ) => apiClient.post<PurchaseRequisition>(`/api/purchase-requisitions/${id}/receive`, { lines }),
+  close: (id: number) => apiClient.post<PurchaseRequisition>(`/api/purchase-requisitions/${id}/close`),
+}
+
+export const ImportApi = {
+  preview: (file: File, fileType: string) => {
+    const form = new FormData()
+    form.append('file', file)
+    return apiClient.post<ImportResult>('/api/import/preview', form, { params: { fileType } })
+  },
+  commit: (file: File, fileType: string) => {
+    const form = new FormData()
+    form.append('file', file)
+    return apiClient.post<ImportResult>('/api/import/commit', form, { params: { fileType } })
+  },
+}
+
+export const ReportsApi = {
+  dashboardSummary: () => apiClient.get<DashboardSummary>('/api/reports/dashboard-summary'),
+  stockValuation: () => apiClient.get<StockValuationRow[]>('/api/reports/stock-valuation'),
+  lowStock: () => apiClient.get<LowStockRow[]>('/api/reports/low-stock'),
+  deadStock: (months = 3) => apiClient.get<DeadStockRow[]>('/api/reports/dead-stock', { params: { months } }),
+  supplierPriceComparison: () => apiClient.get<SupplierPriceRow[]>('/api/reports/supplier-price-comparison'),
+  supplierSpend: () => apiClient.get<SupplierSpendRow[]>('/api/reports/supplier-spend'),
+  purchasePipeline: () => apiClient.get<PurchasePipelineRow[]>('/api/reports/purchase-pipeline'),
+  download: (report: string, format: 'xlsx' | 'pdf', params: Record<string, unknown> = {}) =>
+    apiClient.get<Blob>(`/api/reports/${report}`, { params: { ...params, format }, responseType: 'blob' }),
+}
+
+export const AlertsApi = {
+  list: (params: { status?: string; type?: string; page?: number; size?: number }) =>
+    apiClient.get<Page<AlertResponse>>('/api/alerts', { params }),
+  openCount: () => apiClient.get<number>('/api/alerts/open-count'),
+  acknowledge: (id: number) => apiClient.post<AlertResponse>(`/api/alerts/${id}/acknowledge`),
+  resolve: (id: number) => apiClient.post<AlertResponse>(`/api/alerts/${id}/resolve`),
+  recompute: () => apiClient.post<{ raised: number; resolved: number }>('/api/alerts/recompute'),
 }
 
 export const ConsumptionApi = {

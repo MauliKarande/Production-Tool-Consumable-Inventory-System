@@ -1,7 +1,8 @@
-import { type ReactNode } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom'
 import {
   AppBar,
+  Badge,
   Box,
   Chip,
   Drawer,
@@ -19,9 +20,14 @@ import InventoryIcon from '@mui/icons-material/Inventory2'
 import OutboxIcon from '@mui/icons-material/Outbox'
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd'
 import BarChartIcon from '@mui/icons-material/BarChart'
+import NotificationsIcon from '@mui/icons-material/Notifications'
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
+import AssessmentIcon from '@mui/icons-material/Assessment'
+import UploadFileIcon from '@mui/icons-material/UploadFile'
 import SettingsIcon from '@mui/icons-material/Settings'
 import LogoutIcon from '@mui/icons-material/Logout'
 import { useAuth } from '../../auth/AuthContext'
+import { AlertsApi } from '../../api/endpoints'
 
 const DRAWER_WIDTH = 240
 
@@ -31,13 +37,25 @@ const NAV_ITEMS = [
   { label: 'Issue / Return', path: '/issue', icon: <OutboxIcon /> },
   { label: 'Accountability', path: '/accountability', icon: <AssignmentIndIcon /> },
   { label: 'Consumption', path: '/consumption', icon: <BarChartIcon /> },
+  { label: 'Purchase Requisitions', path: '/purchase-requisitions', icon: <ShoppingCartIcon /> },
+  { label: 'Reports', path: '/reports', icon: <AssessmentIcon /> },
+  { label: 'Alerts', path: '/alerts', icon: <NotificationsIcon />, badge: true },
   { label: 'Masters', path: '/masters', icon: <SettingsIcon />, adminOnly: true },
+  { label: 'Import Data', path: '/import', icon: <UploadFileIcon />, adminOnly: true },
 ]
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { auth, logout, isAdmin } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+  const [openAlerts, setOpenAlerts] = useState(0)
+
+  useEffect(() => {
+    const load = () => AlertsApi.openCount().then((res) => setOpenAlerts(res.data)).catch(() => {})
+    load()
+    const interval = setInterval(load, 60000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -79,7 +97,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
               to={item.path}
               selected={item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)}
             >
-              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemIcon>
+                {item.badge && openAlerts > 0 ? (
+                  <Badge badgeContent={openAlerts} color="error">
+                    {item.icon}
+                  </Badge>
+                ) : (
+                  item.icon
+                )}
+              </ListItemIcon>
               <ListItemText primary={item.label} />
             </ListItemButton>
           ))}

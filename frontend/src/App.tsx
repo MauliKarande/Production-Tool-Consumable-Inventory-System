@@ -9,6 +9,11 @@ import { ItemFormPage } from './pages/ItemFormPage'
 import { IssuePage } from './pages/IssuePage'
 import { AccountabilityPage } from './pages/AccountabilityPage'
 import { ConsumptionPage } from './pages/ConsumptionPage'
+import { AlertsPage } from './pages/AlertsPage'
+import { PurchaseRequisitionsListPage } from './pages/PurchaseRequisitionsListPage'
+import { PurchaseRequisitionFormPage } from './pages/PurchaseRequisitionFormPage'
+import { ReportsPage } from './pages/ReportsPage'
+import { ImportPage } from './pages/ImportPage'
 import { MastersPage } from './pages/MastersPage'
 
 function LoginRoute() {
@@ -40,11 +45,23 @@ export default function App() {
                   <Route path="/issue" element={<IssuePage />} />
                   <Route path="/accountability" element={<AccountabilityPage />} />
                   <Route path="/consumption" element={<ConsumptionPage />} />
+                  <Route path="/alerts" element={<AlertsPage />} />
+                  <Route path="/purchase-requisitions" element={<PurchaseRequisitionsListPage />} />
+                  <Route path="/purchase-requisitions/:id" element={<PurchaseRequisitionFormPage />} />
+                  <Route path="/reports" element={<ReportsPage />} />
                   <Route
                     path="/masters"
                     element={
                       <AdminRoute>
                         <MastersPage />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/import"
+                    element={
+                      <AdminRoute>
+                        <ImportPage />
                       </AdminRoute>
                     }
                   />

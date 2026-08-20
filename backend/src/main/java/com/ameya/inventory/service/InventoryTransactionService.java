@@ -10,6 +10,7 @@ import com.ameya.inventory.entity.Item;
 import com.ameya.inventory.entity.ItemCondition;
 import com.ameya.inventory.entity.Machine;
 import com.ameya.inventory.entity.StockAssignment;
+import com.ameya.inventory.entity.TransactionSource;
 import com.ameya.inventory.entity.TransactionType;
 import com.ameya.inventory.entity.User;
 import com.ameya.inventory.exception.BusinessRuleException;
@@ -277,6 +278,135 @@ public class InventoryTransactionService {
         transactionRepository.save(reversal);
 
         return new InventoryDtos.StockMutationResponse(toResponse(reversal), transactionRepository.currentStock(item.getId()));
+    }
+
+    /**
+     * A plain ISSUE_OUTWARD with no employee and no StockAssignment - for
+     * consumption that was never attributed to a specific person: legacy
+     * Excel daily-grid rows (no employee/machine captured at all, see
+     * Phase 1 doc F.1) and direct-to-floor issue at PR receipt (goods that
+     * bypass the store and go straight to the shop floor, see §J.5).
+     */
+    @Transactional
+    public TransactionResponse postDirectIssue(Long itemId, BigDecimal quantity, Long machineId,
+                                                 String purpose, String remark, Long performedByUserId) {
+        Item item = lockItem(itemId);
+        BigDecimal available = transactionRepository.currentStock(item.getId());
+        if (quantity.compareTo(available) > 0) {
+            throw new BusinessRuleException("Cannot issue " + quantity + " " + item.getUom().getCode() +
+                    ". Only " + available + " " + item.getUom().getCode() + " currently available.");
+        }
+        Machine machine = findActiveMachineOrNull(machineId);
+        User performedBy = getUser(performedByUserId);
+
+        InventoryTransaction txn = newTxn(item, TransactionType.ISSUE_OUTWARD, quantity.negate(),
+                item.getCurrentUnitCost(), performedBy);
+        txn.setMachine(machine);
+        txn.setPurpose(purpose);
+        txn.setRemark(remark);
+        transactionRepository.save(txn);
+
+        return toResponse(txn);
+    }
+
+    /**
+     * The following legacyXxx methods exist only for the Excel migration
+     * importer (com.ameya.inventory.migration). They mirror the live
+     * equivalents above but accept an explicit historical txnDate (instead
+     * of always "now") and always tag source=LEGACY_IMPORT, per Phase 1
+     * doc F.1-F.3 - so a June 2026 legacy row is dated June 2026 in the
+     * ledger, not the day it happened to be imported.
+     */
+    @Transactional
+    public TransactionResponse legacyOpeningBalance(Long itemId, BigDecimal quantity, BigDecimal unitCost,
+                                                       LocalDate txnDate, String remark, Long performedByUserId) {
+        Item item = lockItem(itemId);
+        if (transactionRepository.existsByItem_Id(item.getId())) {
+            throw new BusinessRuleException("Item '" + item.getName() +
+                    "' already has transaction history; opening balance can only be recorded once.");
+        }
+        item.setCurrentUnitCost(unitCost);
+        itemRepository.save(item);
+
+        User performedBy = getUser(performedByUserId);
+        InventoryTransaction txn = newTxn(item, TransactionType.OPENING_BALANCE, quantity, unitCost, performedBy);
+        txn.setTxnDate(txnDate);
+        txn.setSource(TransactionSource.LEGACY_IMPORT);
+        txn.setRemark(remark);
+        transactionRepository.save(txn);
+        return toResponse(txn);
+    }
+
+    @Transactional
+    public TransactionResponse legacyInward(Long itemId, BigDecimal quantity, BigDecimal unitCost,
+                                              LocalDate txnDate, String remark, Long performedByUserId) {
+        Item item = lockItem(itemId);
+        BigDecimal currentQty = transactionRepository.currentStock(item.getId()).max(BigDecimal.ZERO);
+        BigDecimal currentValue = currentQty.multiply(item.getCurrentUnitCost());
+        BigDecimal incomingValue = quantity.multiply(unitCost);
+        BigDecimal totalQty = currentQty.add(quantity);
+        BigDecimal newAverage = totalQty.signum() == 0
+                ? unitCost
+                : currentValue.add(incomingValue).divide(totalQty, 2, RoundingMode.HALF_UP);
+        item.setCurrentUnitCost(newAverage);
+        itemRepository.save(item);
+
+        User performedBy = getUser(performedByUserId);
+        InventoryTransaction txn = newTxn(item, TransactionType.PURCHASE_INWARD, quantity, unitCost, performedBy);
+        txn.setTxnDate(txnDate);
+        txn.setSource(TransactionSource.LEGACY_IMPORT);
+        txn.setRemark(remark);
+        transactionRepository.save(txn);
+        return toResponse(txn);
+    }
+
+    /**
+     * Plain ISSUE_OUTWARD with no employee/assignment, and no
+     * stock-sufficiency check - legacy consumption was never attributed
+     * to a person, and some legacy data (e.g. the oils/coolants sheet,
+     * Phase 1 doc F.2) records monthly consumption with no opening-balance
+     * figure anywhere in the source. Inventing one to satisfy a
+     * sufficiency check would violate the "never invent" rule (A.4 #2)
+     * worse than a temporarily negative running total does. The importer
+     * pre-checks availability itself (to decide whether to log a
+     * reconciliation warning - never via try/catch, since an exception
+     * thrown from inside a @Transactional call marks the whole outer
+     * import transaction rollback-only even if the caller catches it).
+     * The resulting negative stock is expected and should be corrected by
+     * Admin recording a real opening balance once physical stock is
+     * counted; it is not silently hidden - see the import warnings.
+     */
+    @Transactional
+    public TransactionResponse legacyIssueUnchecked(Long itemId, BigDecimal quantity, Long machineId,
+                                                       LocalDate txnDate, String remark, Long performedByUserId) {
+        Item item = lockItem(itemId);
+        Machine machine = findActiveMachineOrNull(machineId);
+        User performedBy = getUser(performedByUserId);
+
+        InventoryTransaction txn = newTxn(item, TransactionType.ISSUE_OUTWARD, quantity.negate(),
+                item.getCurrentUnitCost(), performedBy);
+        txn.setMachine(machine);
+        txn.setTxnDate(txnDate);
+        txn.setSource(TransactionSource.LEGACY_IMPORT);
+        txn.setRemark(remark);
+        transactionRepository.save(txn);
+        return toResponse(txn);
+    }
+
+    /** STOCK_ADJUSTMENT_IN/OUT with an explicit historical date - used for the oil sheet's "ADDED IN MONTH" column. */
+    @Transactional
+    public TransactionResponse legacyAdjustment(Long itemId, BigDecimal quantity, boolean isIn,
+                                                  LocalDate txnDate, String remark, Long performedByUserId) {
+        Item item = lockItem(itemId);
+        TransactionType type = isIn ? TransactionType.STOCK_ADJUSTMENT_IN : TransactionType.STOCK_ADJUSTMENT_OUT;
+        BigDecimal signedQty = isIn ? quantity : quantity.negate();
+        User performedBy = getUser(performedByUserId);
+        InventoryTransaction txn = newTxn(item, type, signedQty, item.getCurrentUnitCost(), performedBy);
+        txn.setTxnDate(txnDate);
+        txn.setSource(TransactionSource.LEGACY_IMPORT);
+        txn.setRemark(remark);
+        transactionRepository.save(txn);
+        return toResponse(txn);
     }
 
     @Transactional(readOnly = true)
