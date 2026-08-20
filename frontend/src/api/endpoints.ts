@@ -1,6 +1,7 @@
 import { apiClient } from './client'
 import type {
   AlertResponse,
+  AppUser,
   AssignmentResponse,
   AttributeDef,
   CategoryConsumption,
@@ -165,6 +166,7 @@ export const InventoryApi = {
     apiClient.post('/api/inventory/adjustment', data),
   damageScrap: (data: { itemId: number; type: 'DAMAGE' | 'SCRAP'; quantity: number; reason: string }) =>
     apiClient.post('/api/inventory/damage-scrap', data),
+  reversal: (data: { transactionId: number; reason: string }) => apiClient.post('/api/inventory/reversal', data),
   currentStock: (itemId: number) => apiClient.get<CurrentStockResponse>(`/api/inventory/current-stock/${itemId}`),
 }
 
@@ -218,6 +220,16 @@ export const ReportsApi = {
   purchasePipeline: () => apiClient.get<PurchasePipelineRow[]>('/api/reports/purchase-pipeline'),
   download: (report: string, format: 'xlsx' | 'pdf', params: Record<string, unknown> = {}) =>
     apiClient.get<Blob>(`/api/reports/${report}`, { params: { ...params, format }, responseType: 'blob' }),
+}
+
+export const UsersApi = {
+  list: (page = 0, size = 20) => apiClient.get<Page<AppUser>>('/api/users', { params: { page, size } }),
+  get: (id: number) => apiClient.get<AppUser>(`/api/users/${id}`),
+  create: (data: { username: string; password: string; employeeId?: number | null; roleName: string }) =>
+    apiClient.post<AppUser>('/api/users', data),
+  update: (id: number, data: { employeeId?: number | null; roleName: string; active: boolean }) =>
+    apiClient.put<AppUser>(`/api/users/${id}`, data),
+  resetPassword: (id: number, newPassword: string) => apiClient.post(`/api/users/${id}/reset-password`, { newPassword }),
 }
 
 export const AlertsApi = {

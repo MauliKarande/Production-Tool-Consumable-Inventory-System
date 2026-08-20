@@ -24,6 +24,8 @@ import NotificationsIcon from '@mui/icons-material/Notifications'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 import AssessmentIcon from '@mui/icons-material/Assessment'
 import UploadFileIcon from '@mui/icons-material/UploadFile'
+import BuildIcon from '@mui/icons-material/Build'
+import GroupIcon from '@mui/icons-material/Group'
 import SettingsIcon from '@mui/icons-material/Settings'
 import LogoutIcon from '@mui/icons-material/Logout'
 import { useAuth } from '../../auth/AuthContext'
@@ -40,8 +42,10 @@ const NAV_ITEMS = [
   { label: 'Purchase Requisitions', path: '/purchase-requisitions', icon: <ShoppingCartIcon /> },
   { label: 'Reports', path: '/reports', icon: <AssessmentIcon /> },
   { label: 'Alerts', path: '/alerts', icon: <NotificationsIcon />, badge: true },
+  { label: 'Stock Corrections', path: '/corrections', icon: <BuildIcon />, adminOnly: true },
   { label: 'Masters', path: '/masters', icon: <SettingsIcon />, adminOnly: true },
   { label: 'Import Data', path: '/import', icon: <UploadFileIcon />, adminOnly: true },
+  { label: 'Users', path: '/users', icon: <GroupIcon />, adminOnly: true },
 ]
 
 export function AppLayout({ children }: { children: ReactNode }) {

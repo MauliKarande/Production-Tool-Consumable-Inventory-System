@@ -317,6 +317,16 @@ export interface ImportResult {
   errors: string[]
 }
 
+export interface AppUser {
+  id: number
+  username: string
+  employeeId: number | null
+  employeeName: string | null
+  roleName: string
+  active: boolean
+  lastLoginAt: string | null
+}
+
 export interface AlertResponse {
   id: number
   type: 'LOW_STOCK' | 'OUT_OF_STOCK' | 'HIGH_CONSUMPTION' | 'PENDING_RETURN' | 'UNUSUAL_CONSUMPTION' | 'PURCHASE_PENDING'

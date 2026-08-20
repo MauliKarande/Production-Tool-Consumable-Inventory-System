@@ -14,6 +14,8 @@ import { PurchaseRequisitionsListPage } from './pages/PurchaseRequisitionsListPa
 import { PurchaseRequisitionFormPage } from './pages/PurchaseRequisitionFormPage'
 import { ReportsPage } from './pages/ReportsPage'
 import { ImportPage } from './pages/ImportPage'
+import { StockCorrectionsPage } from './pages/StockCorrectionsPage'
+import { UsersPage } from './pages/UsersPage'
 import { MastersPage } from './pages/MastersPage'
 
 function LoginRoute() {
@@ -62,6 +64,22 @@ export default function App() {
                     element={
                       <AdminRoute>
                         <ImportPage />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/corrections"
+                    element={
+                      <AdminRoute>
+                        <StockCorrectionsPage />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/users"
+                    element={
+                      <AdminRoute>
+                        <UsersPage />
                       </AdminRoute>
                     }
                   />
