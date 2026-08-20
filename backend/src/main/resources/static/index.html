@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ameya Inventory</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128296;</text></svg>">
+    <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+
+<!-- ============================ LOGIN ============================ -->
+<div id="login-view" class="login-wrap hidden">
+    <div class="login-card">
+        <div class="brand">
+            <div class="brand-mark">AP</div>
+            <div>
+                <h1>Ameya Precision Engineers</h1>
+                <p>Production Tool &amp; Consumable Inventory</p>
+            </div>
+        </div>
+
+        <form id="login-form" autocomplete="on">
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" autocomplete="username" required autofocus
+                   placeholder="e.g. admin">
+
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required
+                   placeholder="Your password">
+
+            <div id="login-error" class="alert hidden"></div>
+
+            <button id="login-btn" type="submit" class="btn-primary">Sign in</button>
+        </form>
+
+        <p class="login-foot">
+            Authorised users only. Contact the system administrator for access.
+        </p>
+    </div>
+</div>
+
+<!-- ============================ APP ============================ -->
+<div id="app-view" class="app hidden">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-mark sm">AP</div>
+            <span>Inventory</span>
+        </div>
+        <nav id="nav"></nav>
+        <div class="sidebar-foot">
+            <a href="/swagger-ui.html" target="_blank" rel="noopener">API docs &#8599;</a>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h2 id="page-title">Dashboard</h2>
+            <div class="user-box">
+                <div class="user-meta">
+                    <strong id="who-user"></strong>
+                    <span id="who-role" class="role-chip"></span>
+                </div>
+                <button id="change-pw-btn" class="btn-ghost" type="button">Change password</button>
+                <button id="logout-btn" class="btn-ghost danger" type="button">Sign out</button>
+            </div>
+        </header>
+
+        <section id="content" class="content"></section>
+    </main>
+</div>
+
+<!-- ======================= CHANGE PASSWORD ======================= -->
+<div id="pw-modal" class="modal-backdrop hidden">
+    <div class="modal">
+        <h3>Change password</h3>
+        <form id="pw-form">
+            <label for="pw-current">Current password</label>
+            <input id="pw-current" type="password" autocomplete="current-password" required>
+
+            <label for="pw-new">New password</label>
+            <input id="pw-new" type="password" autocomplete="new-password" required minlength="8">
+
+            <label for="pw-confirm">Confirm new password</label>
+            <input id="pw-confirm" type="password" autocomplete="new-password" required minlength="8">
+
+            <div id="pw-msg" class="alert hidden"></div>
+
+            <div class="modal-actions">
+                <button type="button" id="pw-cancel" class="btn-ghost">Cancel</button>
+                <button type="submit" class="btn-primary">Update password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/assets/app.js"></script>
+</body>
+</html>

@@ -1,6 +1,9 @@
 package com.ameya.inventory.controller;
 
+import com.ameya.inventory.dto.inventory.InventoryDtos;
+import com.ameya.inventory.dto.inventory.TransactionResponse;
 import com.ameya.inventory.dto.item.ItemDtos;
+import com.ameya.inventory.service.InventoryTransactionService;
 import com.ameya.inventory.service.ItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ItemController {
 
     private final ItemService service;
+    private final InventoryTransactionService inventoryTransactionService;
 
     @GetMapping
     public Page<ItemDtos.Response> search(
@@ -51,5 +55,20 @@ public class ItemController {
     @PreAuthorize("hasRole('ADMIN')")
     public ItemDtos.Response update(@PathVariable Long id, @Valid @RequestBody ItemDtos.UpdateRequest request) {
         return service.update(id, request);
+    }
+
+    @GetMapping("/{id}/transactions")
+    public Page<TransactionResponse> transactions(@PathVariable Long id, Pageable pageable) {
+        return inventoryTransactionService.getHistory(id, pageable);
+    }
+
+    @GetMapping("/{id}/stock-summary")
+    public InventoryDtos.StockSummaryResponse stockSummary(@PathVariable Long id) {
+        return inventoryTransactionService.getStockSummary(id);
+    }
+
+    @GetMapping("/{id}/current-stock")
+    public InventoryDtos.CurrentStockResponse currentStock(@PathVariable Long id) {
+        return inventoryTransactionService.getCurrentStock(id);
     }
 }
